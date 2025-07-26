@@ -220,20 +220,14 @@ const VendorAnalytics = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={supplier.name}
-                      secondary={
-                        <Box>
-                          <Typography variant="body2">
-                            {supplier.orders} orders • ₹{supplier.spent.toLocaleString()} spent
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                            <StarIcon fontSize="small" color="warning" />
-                            <Typography variant="body2" color="text.secondary">
-                              {supplier.rating}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      }
+                      secondary={`${supplier.orders} orders • ₹${supplier.spent.toLocaleString()} spent`}
                     />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+                      <StarIcon fontSize="small" color="warning" />
+                      <Typography variant="body2" color="text.secondary">
+                        {supplier.rating}
+                      </Typography>
+                    </Box>
                   </ListItem>
                 ))}
               </List>

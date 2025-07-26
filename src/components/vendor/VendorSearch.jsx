@@ -26,7 +26,14 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material'
 import {
   Search as SearchIcon,
@@ -36,10 +43,12 @@ import {
   LocationOn,
   Phone,
   Email,
-  Star
+  Star,
+  ShoppingCart as BuyIcon
 } from '@mui/icons-material'
-import { supplierService } from '../../services/firebaseService'
+import { supplierService, reviewService } from '../../services/firebaseService'
 import { useAuth } from '../../contexts/AuthContext'
+import SharedBuyDialog from './SharedBuyDialog'
 import toast from 'react-hot-toast'
 
 const VendorSearch = () => {
@@ -51,6 +60,9 @@ const VendorSearch = () => {
   const [selectedSupplier, setSelectedSupplier] = useState(null)
   const [compareList, setCompareList] = useState([])
   const [showFilters, setShowFilters] = useState(false)
+  const [showCompareDialog, setShowCompareDialog] = useState(false)
+  const [buyDialog, setBuyDialog] = useState(false)
+  const [selectedSupplierForBuy, setSelectedSupplierForBuy] = useState(null)
   const [filters, setFilters] = useState({
     category: '',
     location: '',
@@ -68,8 +80,26 @@ const VendorSearch = () => {
       setLoading(true)
       const suppliersData = await supplierService.getSuppliers()
       console.log('Loaded suppliers:', suppliersData) // Debug log
-      setSuppliers(suppliersData)
-      setFilteredSuppliers(suppliersData)
+      
+      // Get updated rating information for each supplier
+      const suppliersWithRatings = await Promise.all(
+        suppliersData.map(async (supplier) => {
+          try {
+            const ratingInfo = await reviewService.getSupplierRatingInfo(supplier.id)
+            return {
+              ...supplier,
+              rating: ratingInfo.rating,
+              totalReviews: ratingInfo.totalReviews
+            }
+          } catch (error) {
+            console.error(`Error getting rating for supplier ${supplier.id}:`, error)
+            return supplier
+          }
+        })
+      )
+      
+      setSuppliers(suppliersWithRatings)
+      setFilteredSuppliers(suppliersWithRatings)
     } catch (error) {
       console.error('Error loading suppliers:', error)
       toast.error('Failed to load suppliers')
@@ -113,6 +143,7 @@ const VendorSearch = () => {
   const handleAddToCompare = (supplier) => {
     if (compareList.length < 3 && !compareList.find(s => s.id === supplier.id)) {
       setCompareList([...compareList, supplier])
+      toast.success(`${supplier.name} added to comparison`)
     }
   }
 
@@ -128,6 +159,11 @@ const VendorSearch = () => {
       console.error('Error fetching supplier details:', error)
       setSelectedSupplier(supplier)
     }
+  }
+
+  const handleBuyClick = (supplier) => {
+    setSelectedSupplierForBuy(supplier)
+    setBuyDialog(true)
   }
 
   const resetFilters = () => {
@@ -170,7 +206,7 @@ const VendorSearch = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={2}>
               <Button
                 fullWidth
                 variant="outlined"
@@ -180,15 +216,25 @@ const VendorSearch = () => {
                 Filters
               </Button>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={2}>
               <Button
                 fullWidth
                 variant="outlined"
                 startIcon={<CompareIcon />}
+                onClick={() => setShowCompareDialog(true)}
+                disabled={compareList.length === 0}
+              >
+                Compare ({compareList.length})
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                fullWidth
+                variant="outlined"
                 onClick={() => setCompareList([])}
                 disabled={compareList.length === 0}
               >
-                Clear Compare ({compareList.length})
+                Clear All
               </Button>
             </Grid>
           </Grid>
@@ -294,9 +340,9 @@ const VendorSearch = () => {
                           </Typography>
                           
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <Rating value={supplier.rating} readOnly size="small" />
+                            <Rating value={supplier.rating || 0} readOnly size="small" />
                             <Typography variant="body2" sx={{ ml: 1 }}>
-                              ({supplier.rating})
+                              ({supplier.rating || 0}) • {supplier.totalReviews || 0} reviews
                             </Typography>
                           </Box>
                           
@@ -333,17 +379,30 @@ const VendorSearch = () => {
                           </Box>
                         </Box>
                         
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleAddToCompare(supplier)
-                          }}
-                          disabled={compareList.length >= 3 && !compareList.find(s => s.id === supplier.id)}
-                        >
-                          {compareList.find(s => s.id === supplier.id) ? 'Added' : 'Compare'}
-                        </Button>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAddToCompare(supplier)
+                            }}
+                            disabled={compareList.length >= 3 && !compareList.find(s => s.id === supplier.id)}
+                          >
+                            {compareList.find(s => s.id === supplier.id) ? 'Added' : 'Compare'}
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<BuyIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleBuyClick(supplier)
+                            }}
+                          >
+                            Buy Now
+                          </Button>
+                        </Box>
                       </Box>
                     </CardContent>
                   </Card>
@@ -370,9 +429,9 @@ const VendorSearch = () => {
                           primary={supplier.name}
                           secondary={
                             <Box>
-                              <Rating value={supplier.rating} readOnly size="small" />
+                              <Rating value={supplier.rating || 0} readOnly size="small" />
                               <Typography variant="body2" color="text.secondary">
-                                {supplier.location}
+                                {supplier.location} • {supplier.totalReviews || 0} reviews
                               </Typography>
                             </Box>
                           }
@@ -392,9 +451,9 @@ const VendorSearch = () => {
                 <Button
                   fullWidth
                   variant="contained"
-                  onClick={() => setCompareList([])}
+                  onClick={() => setShowCompareDialog(true)}
                 >
-                  Clear All
+                  View Comparison
                 </Button>
               </CardContent>
             </Card>
@@ -452,8 +511,8 @@ const VendorSearch = () => {
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2">
                       <strong>Rating:</strong> 
-                      <Rating value={selectedSupplier.rating} readOnly size="small" sx={{ ml: 1 }} />
-                      ({selectedSupplier.rating})
+                      <Rating value={selectedSupplier.rating || 0} readOnly size="small" sx={{ ml: 1 }} />
+                      ({selectedSupplier.rating || 0}) • {selectedSupplier.totalReviews || 0} reviews
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
@@ -475,7 +534,7 @@ const VendorSearch = () => {
             <DialogActions>
               <Button onClick={() => setSelectedSupplier(null)}>Close</Button>
               <Button 
-                variant="contained"
+                variant="outlined"
                 onClick={() => {
                   handleAddToCompare(selectedSupplier)
                   setSelectedSupplier(null)
@@ -484,10 +543,125 @@ const VendorSearch = () => {
               >
                 Add to Compare
               </Button>
+              <Button 
+                variant="contained"
+                startIcon={<BuyIcon />}
+                onClick={() => {
+                  handleBuyClick(selectedSupplier)
+                  setSelectedSupplier(null)
+                }}
+              >
+                Buy Now
+              </Button>
             </DialogActions>
           </>
         )}
       </Dialog>
+
+      {/* Comparison Dialog */}
+      <Dialog
+        open={showCompareDialog}
+        onClose={() => setShowCompareDialog(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Compare Suppliers</Typography>
+            <IconButton onClick={() => setShowCompareDialog(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Feature</TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      {supplier.name}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell><strong>Rating</strong></TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      <Rating value={supplier.rating || 0} readOnly />
+                      <Typography variant="body2">({supplier.rating || 0})</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {supplier.totalReviews || 0} reviews
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Location</strong></TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      {supplier.location}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Verified</strong></TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      {supplier.verified ? 'Yes' : 'No'}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Specialties</strong></TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {supplier.specialties?.map((specialty) => (
+                          <Chip key={specialty} label={specialty} size="small" />
+                        )) || (
+                          <Chip label="General" size="small" />
+                        )}
+                      </Box>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Contact</strong></TableCell>
+                  {compareList.map((supplier) => (
+                    <TableCell key={supplier.id} align="center">
+                      <Typography variant="body2">{supplier.phone}</Typography>
+                      <Typography variant="body2">{supplier.email}</Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowCompareDialog(false)}>Close</Button>
+          <Button 
+            variant="contained"
+            onClick={() => {
+              setShowCompareDialog(false)
+              // Add logic to select best supplier based on comparison
+            }}
+          >
+            Select Best Option
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Shared Buy Dialog */}
+      <SharedBuyDialog
+        open={buyDialog}
+        onClose={() => setBuyDialog(false)}
+        supplier={selectedSupplierForBuy}
+      />
     </Box>
   )
 }

@@ -4,11 +4,72 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StreetFood Connect - Raw Material Sourcing Platform</title>
-    <meta name="description" content="Connect street food vendors with trusted suppliers for quality raw materials" />
+    <title>StreetFood Connect - Connect with the best suppliers</title>
+    
+    <!-- Import Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+      /* Custom loading spinner */
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(99, 102, 241, 0.2);
+        border-top: 3px solid #6366f1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+        min-height: 24px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      
+      /* Selection color */
+      ::selection {
+        background: rgba(99, 102, 241, 0.3);
+        color: #f8fafc;
+      }
+      
+      /* Focus outline */
+      *:focus {
+        outline: 2px solid rgba(99, 102, 241, 0.5);
+        outline-offset: 2px;
+      }
+      
+      /* Smooth transitions */
+      * {
+        transition: all 0.2s ease-in-out;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -42,21 +42,20 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  const login = async (email, password, role) => {
+  const login = async (email, password) => {
     try {
       setLoading(true)
       const firebaseUser = await authService.login(email, password)
       const userProfile = await userService.getUserProfile(firebaseUser.uid)
       
-      if (userProfile && userProfile.role === role) {
+      if (userProfile) {
         setUser(userProfile)
         setUserRole(userProfile.role)
         toast.success(`Welcome back, ${userProfile.name}!`)
-        return true
+        return userProfile
       } else {
         await authService.logout()
-        toast.error('Invalid role selected for this account')
-        return false
+        throw new Error('User profile not found')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -71,23 +70,23 @@ export const AuthProvider = ({ children }) => {
       }
       
       toast.error(errorMessage)
-      return false
+      throw error
     } finally {
       setLoading(false)
     }
   }
 
-  const register = async (userData) => {
+  const register = async (email, password, userData) => {
     try {
       setLoading(true)
-      const firebaseUser = await authService.register(userData.email, userData.password, userData)
+      const firebaseUser = await authService.register(email, password, userData)
       const userProfile = await userService.getUserProfile(firebaseUser.uid)
       
       setUser(userProfile)
       setUserRole(userProfile.role)
       
       toast.success('Registration successful! Welcome to StreetFood Connect.')
-      return true
+      return userProfile
     } catch (error) {
       console.error('Registration error:', error)
       let errorMessage = 'Registration failed. Please try again.'
@@ -101,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       toast.error(errorMessage)
-      return false
+      throw error
     } finally {
       setLoading(false)
     }
