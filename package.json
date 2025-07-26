@@ -1,0 +1,48 @@
+{
+  "name": "street-food-sourcing-platform",
+  "version": "1.0.0",
+  "description": "A web-based solution for street food vendors to source raw materials from trusted suppliers",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
+    "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^5.18.0",
+    "@mui/material": "^5.18.0",
+    "@mui/x-data-grid": "^6.0.0",
+    "axios": "^1.3.4",
+    "date-fns": "^2.30.0",
+    "firebase": "^9.23.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.61.1",
+    "react-hot-toast": "^2.5.2",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.30.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^3.1.0",
+    "eslint": "^8.36.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "vite": "^4.5.14"
+  },
+  "keywords": [
+    "street-food",
+    "vendor-sourcing",
+    "raw-materials",
+    "supply-chain",
+    "react",
+    "material-ui"
+  ],
+  "author": "Tutedude Hackathon",
+  "license": "MIT"
+}
